@@ -1,4 +1,11 @@
-# SPIS15-Project-Graphics-Maxwell-Sim
-SPIS 2015 UCSD Project with Graphics -- Maxwell and Sim
+# SPIS 2015 UCSD Project with Graphics -- Maxwell and Sim
 
-Super-duper image manipulation software called GLOTCH. Comes with a few different commands to make glitch art.
+GLOTCH -- an image manipulation software that purposefully 'glitches' images in order to create computer generated art. Its features include:
+
+* Fully functioning GUI
+* Multiple different functions with user-controlled random seeds
+* Innuendo-packed error messages
+* Undo
+* Shrubbery-inspired window icons
+
+
