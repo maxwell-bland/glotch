@@ -3,13 +3,13 @@ import Tkinter
 from PIL import Image
 import random
 
-def seamer(im, inter):
-    '''takes parameters im and interpolation'''
+def seamer(im, inter, loops):
+    '''takes parameters im, interpolation, and loops'''
     def putseamvert(im, x ,y):
         imsize = im.size
         (width, height) = imsize
         if height > 900:
-	    height = 900
+            height = 900
         if y == height - 1:
             im.putpixel((x,y), (255,0,0))
             return
@@ -41,7 +41,7 @@ def seamer(im, inter):
     def putseamhori(im, x ,y):
         (width, height) = im.size
         if width > 900:
-	    width = 900
+            width = 900
         if x == width - 1:
             im.putpixel((x,y), (255,0,0))
             return
@@ -94,6 +94,7 @@ def seamer(im, inter):
                                 im.putpixel((i - (width/inter),y),(r,g,b))
 
         return im
-
-    return cutter(im, inter)
+    for x in xrange(0, loops):
+        cutter(im, inter)
+    return im
 

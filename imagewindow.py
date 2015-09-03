@@ -135,6 +135,7 @@ def shifter():
     canvas.image = tkimage2
     imagecopy = im2.copy()
     imagelist.append(imagecopy)
+    statelist.append(random.getstate())
     operationlist.append('shifter')
 
 def blurer(im):
@@ -180,7 +181,7 @@ def pixelate(im, amt):
 
     return im2
 
-def disburse(im, iters, sizex, sizey):
+def disperse(im, iters, sizex, sizey):
     imsize = im.size
     (width, height) = imsize
     if sizex > width:
@@ -231,6 +232,7 @@ def degrader():
         numdegrades = numdegrades - 1
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('degrader')
 
 def tear():
@@ -240,6 +242,7 @@ def tear():
     canvas.image = tkimage2
     imagecopy = im2.copy()
     imagelist.append(imagecopy)
+    statelist.append(random.getstate())
     operationlist.append('tear')
 
 def blur():
@@ -251,13 +254,13 @@ def blur():
     canvas.image = tkimage2
     imagecopy = im2.copy()
     imagelist.append(imagecopy)
+    statelist.append(random.getstate())
     operationlist.append('blurer')
 
 
 def undo():
-    global im
-    global numdegrades
-    if len(imagelist) > 0:
+    global im, statelist, imagelist, operationlist, numdegrades
+    if len(imagelist) > 0 and len(statelist) > 1:
         lastoper = operationlist.pop()
         if lastoper == 'degrader':
             numdegrades += 1
@@ -266,20 +269,25 @@ def undo():
         tkimage2 = ImageTk.PhotoImage(im2)
         canvas.configure(image = tkimage2)
         canvas.image = tkimage2
-    else:
+        random.setstate(statelist.pop())
+    elif len(imagelist) == 0:
+        random.setstate(statelist[0])
         im = Image.open(picname)
         tkimage = ImageTk.PhotoImage(im)
         canvas.configure(image = tkimage)
         canvas.image = tkimage
 
+def listcmdssofar(event):
+    print operationlist
+    print statelist
 
-class DisburseDialog:
+class DisperseDialog:
 
     def __init__(self, parent):
 
         top = self.top = Tkinter.Toplevel(parent)
 
-        top.title("Disburse")
+        top.title("Disperse")
 
         top.resizable(0,0)
 
@@ -298,25 +306,26 @@ class DisburseDialog:
         self.entry3 = Tkinter.Entry(top)
         self.entry3.pack(padx =10, pady= (0,5))
 
-        button = Tkinter.Button(top, text="OK", command=self.disbursed)
+        button = Tkinter.Button(top, text="OK", command=self.dispersed)
         button.pack(padx =10, pady= 5)
 
         top.iconbitmap("@icon.xbm")
 
         
-    def disbursed(self):
+    def dispersed(self):
         global im
         Iter = int(self.entry1.get())
         Width = int(self.entry2.get())
         Height = int(self.entry3.get())
-        im2 = disburse(im, Iter, Width, Height)
+        im2 = disperse(im, Iter, Width, Height)
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
         canvas.configure(image = tkimage2)
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
-        operationlist.append('disburse')
+        statelist.append(random.getstate())
+        operationlist.append('disperse')
         self.top.destroy()
 
 
@@ -354,6 +363,7 @@ class DripDialog:
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('ndrip')
         self.top.destroy()
 
@@ -368,12 +378,19 @@ class SeamDialog:
 
         top.resizable(0,0)
 
-        Tkinter.Label(top, text="Interpolation:").pack(padx =10, pady= 5)
+        self.label1 = Tkinter.Label(top, text="Interpolation:")
+        self.label1.pack(padx =10, pady= 5)
 
         self.entry1 = Tkinter.Entry(top)
-        self.entry1.pack(padx =10, pady= (0,5))
+        self.entry1.pack(padx =10)
 
-        button = Tkinter.Button(top, text="OK", command=self.seam)
+        self.label2 = Tkinter.Label(top, text="Loops:")
+        self.label2.pack(padx =10, pady= 5)
+        
+        self.entry2 = Tkinter.Entry(top)
+        self.entry2.pack(padx =10, pady= (0,5))
+
+        button = self.button = Tkinter.Button(top, text="OK", command=self.seam)
         button.pack(padx =10, pady= (0,5))
 
         top.iconbitmap("@icon.xbm")
@@ -381,15 +398,38 @@ class SeamDialog:
     def seam(self):
         global im
         amt = (abs(int(self.entry1.get())) + 1)
-        im2 = seamer(im, amt)
-        im = im2
-        tkimage2 = ImageTk.PhotoImage(im2)
-        canvas.configure(image = tkimage2)
-        canvas.image = tkimage2
-        imagecopy = im2.copy()
+        loops = abs(int(self.entry2.get()))
+        self.button.destroy()
+        self.label1.pack_forget()
+        self.entry1.pack_forget()
+        self.label2.pack_forget()
+        self.entry2.pack_forget()
+        self.loading = Tkinter.Label(self.top, text="Loading...").pack(padx = 10, pady = 5)
+        progressbar = self.progressbar = ttk.Progressbar(master = self.top, orient='horizontal', length=200, mode='determinate')
+        progressbar.pack(padx = 10, pady = 5)
+        cancelbutton = self.cancelbutton = Tkinter.Button(self.top, text="Cancel", command=self.cancel)
+        cancelbutton.pack(pady = 5)
+        root.update_idletasks()
+        for x in xrange(loops):
+            im2 = seamer(im, amt, 1)
+            self.progressbar.step(100/loops)
+            im = im2
+            tkimage2 = ImageTk.PhotoImage(im2)
+            canvas.configure(image = tkimage2)
+            canvas.image = tkimage2
+            imagecopy = im2.copy()
+            root.update()
+            if self.top == None:
+                return
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('seamer')
         self.top.destroy()
+
+    def cancel(self):
+        if not self.top == None:
+            self.top.destroy()
+            self.top = None
 
 class PixelDialog:
 
@@ -421,6 +461,7 @@ class PixelDialog:
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('pixelate')
         self.top.destroy()
 
@@ -479,7 +520,7 @@ class RandDialog:
 
 def randomize():
     global im
-    listoper = [shifter,degrader,tear,blur, pixelate, undo, disburse, graindrip, seamer]
+    listoper = [shifter,degrader,tear,blur, pixelate, undo, disperse, graindrip, seamer]
     randint1 = random.randint(0, 30)
     randint2 = random.randint(0,2000)
     randint3 = random.randint(0,2000)
@@ -492,16 +533,18 @@ def randomize():
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('pixelate')
-    elif cmd == disburse:
-        im2 = disburse(im, randint1, randint2, randint3)
+    elif cmd == disperse:
+        im2 = disperse(im, randint1, randint2, randint3)
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
         canvas.configure(image = tkimage2)
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
-        operationlist.append('disburse')
+        statelist.append(random.getstate())
+        operationlist.append('disperse')
     elif cmd == graindrip:
         Gain = float(random.random())
         Height = int(randint2)
@@ -511,15 +554,17 @@ def randomize():
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('ndrip')
     elif cmd == seamer:
-        im2 = seamer(im, random.randint(1, 300))
+        im2 = seamer(im, random.randint(1, 300), random.randint(1,3))
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
         canvas.configure(image = tkimage2)
         canvas.image = tkimage2
         imagecopy = im2.copy()
         imagelist.append(imagecopy)
+        statelist.append(random.getstate())
         operationlist.append('seamer')
     else:
         cmd()
@@ -583,13 +628,16 @@ class SeedChangeDialog:
         top.iconbitmap("@icon.xbm")
 
     def changeseed(self):
-        global seed, seedlabel
+        global seed, seedlabel, statelist
         try:
+            statelist = []
             seed = int(self.entry1.get())
             random.seed(seed)
             seedlabel.config(text = "Seed #: " + str(seed))
             print "Your new seed is: " + str(seed)
             root.update()
+            statelist.append(random.getstate())
+            random.setstate(random.getstate())
             self.top.destroy()
         except ValueError:
             InvalidSeed(root)
@@ -695,13 +743,14 @@ def dripdiag():
 def pixeldiag():
     pixeldiag = PixelDialog(root)
 
-def disbursediag():
-    disdiag = DisburseDialog(root)
+def dispersediag():
+    disdiag = DisperseDialog(root)
             
 def startit():
-    global imagelist, operationlist, seed, picname, numdegrades, im, root, tkimage, canvas, seedlabel
+    global imagelist, operationlist, statelist, seed, picname, numdegrades, im, root, tkimage, canvas, seedlabel
     imagelist = []
     operationlist = []
+    statelist = []
     random.seed(seed)
     numdegrades = 7
     root = Tkinter.Tk()
@@ -718,11 +767,13 @@ def startit():
         b5 = Tkinter.Button(text="Blur", fg="black", command = blur).grid(row = 5, column = 0)
         b7 = Tkinter.Button(text="N. Drip", fg="black", command = dripdiag).grid(row = 6, column = 0)
         b8 = Tkinter.Button(text="Pixelate", fg="black", command = pixeldiag).grid(row = 7, column = 0)
-        b9 = Tkinter.Button(text="Disburse", fg="black", command = disbursediag).grid(row = 8, column = 0)
+        b9 = Tkinter.Button(text="Disperse", fg="black", command = dispersediag).grid(row = 8, column = 0)
         b10 = Tkinter.Button(text="Random", fg="black", command = randdiag).grid(row = 10, column = 0)
         b11 = Tkinter.Button(text="Seam Cut", fg="black", command = seamdiag).grid(row = 9, column = 0)
         seedlabel = Tkinter.Label(root, text = "Seed #: " + str(seed))
         seedlabel.grid(row = 13, column = 11, sticky = 'e')
+        root.bind('<Control-p>', listcmdssofar)
+        statelist.append(random.getstate())
         root.iconbitmap("@icon.xbm")
         root.mainloop()
     else:
