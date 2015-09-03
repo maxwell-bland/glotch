@@ -222,7 +222,7 @@ def graindrip(im, dripamount, height_variance):
 def degrader():
     global numdegrades
     global im
-    if numdegrades > 4:
+    if numdegrades > 5:
         im2 = degradeColors(im, numdegrades)
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
@@ -380,7 +380,7 @@ class SeamDialog:
 
     def seam(self):
         global im
-        amt = abs(int(self.entry1.get())) + 1 
+        amt = (abs(int(self.entry1.get())) + 1)
         im2 = seamer(im, amt)
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
@@ -478,8 +478,8 @@ class RandDialog:
             self.top = None
 
 def randomize():
-    listoper = [shifter,degrader,tear,blur, pixelate, undo, disburse, graindrip, seamer]
     global im
+    listoper = [shifter,degrader,tear,blur, pixelate, undo, disburse, graindrip, seamer]
     randint1 = random.randint(0, 30)
     randint2 = random.randint(0,2000)
     randint3 = random.randint(0,2000)
@@ -513,7 +513,7 @@ def randomize():
         imagelist.append(imagecopy)
         operationlist.append('ndrip')
     elif cmd == seamer:
-        im2 = seamer(im, randint2)
+        im2 = seamer(im, random.randint(1, 300))
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
         canvas.configure(image = tkimage2)

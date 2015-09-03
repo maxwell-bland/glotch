@@ -43,12 +43,12 @@ def seamer(im, inter):
         if x == width - 1:
             im.putpixel((x,y), (255,0,0))
             return
-        elif y + 1 == height:
+        elif y + 1 >= height - 1:
             (value2) = im.getpixel((x + 1,y))[0]
             (value3) = im.getpixel((x + 1,y - 1))[0]
             minvalue = max(value2, value3)
             value4 = 0
-        elif y - 1 == 0:
+        elif y - 1 <= 1:
             (value2) = im.getpixel((x + 1,y))[0]
             (value4) = im.getpixel((x + 1,y + 1))[0]
             minvalue = max(value2, value4)
