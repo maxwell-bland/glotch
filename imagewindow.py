@@ -418,12 +418,12 @@ class SeamDialog:
             canvas.configure(image = tkimage2)
             canvas.image = tkimage2
             imagecopy = im2.copy()
+            imagelist.append(imagecopy)
+            statelist.append(random.getstate())
+            operationlist.append('seamer')
             root.update()
             if self.top == None:
                 return
-        imagelist.append(imagecopy)
-        statelist.append(random.getstate())
-        operationlist.append('seamer')
         self.top.destroy()
 
     def cancel(self):
@@ -476,13 +476,24 @@ class RandDialog:
         top.resizable(0,0)
 
         label = self.label = Tkinter.Label(top, text="Iterations:")
-        label.pack(padx = 10, pady = 5)
+        label.pack(padx = 10, pady = (5,0))
         
-
         entry1 = self.entry1 = Tkinter.Entry(top)
-        entry1.pack(padx = 10, pady = 5)
+        entry1.pack(padx = 10, pady = 5) 
 
-        button = self.button = Tkinter.Button(top, text="OK", command=self.random)
+        button2 = self.button = Tkinter.Button(top, text="OK", command=self.random)
+        button2.pack()
+
+        self.changeseedlabel = Tkinter.Label(top, text="Change Seed?")
+        self.changeseedlabel.pack(pady = 5)
+        self.entry2 = Tkinter.Entry(top)
+        self.entry2.pack(padx = 20)
+
+        def inputrand():
+            self.entry2.delete(0,9999999)
+            self.entry2.insert(0, random.randint(0,9999999))
+            
+        button = self.button2 = Tkinter.Button(top, text="Random Seed",command = inputrand)
         button.pack(pady = 5)
 
         top.iconbitmap("@icon.xbm")
@@ -493,11 +504,26 @@ class RandDialog:
         time.sleep(3)
         
     def random(self):
-
+        try:
+            seed = self.entry2.get()
+            if seed:
+                seed = int(self.entry2.get())
+        except ValueError:
+            InvalidSeed(root)
         iter = int(self.entry1.get())
+        if seed:
+            global seed, seedlabel
+            seed = int(self.entry2.get())
+            random.seed(seed)
+            seedlabel.config(text = "Seed #: " + str(seed))
+            print "Your new seed is: " + str(seed)
+            root.update()
         self.button.destroy()
+        self.button2.destroy()
         self.label.pack_forget()
+        self.changeseedlabel.pack_forget()
         self.entry1.pack_forget()
+        self.entry2.pack_forget()
         
         self.loading = Tkinter.Label(self.top, text="Loading...").pack(padx = 10, pady = 5)
         progressbar = self.progressbar = ttk.Progressbar(master = self.top, orient='horizontal', length=200, mode='determinate')
@@ -520,11 +546,14 @@ class RandDialog:
 
 def randomize():
     global im
-    listoper = [shifter,degrader,tear,blur, pixelate, undo, disperse, graindrip, seamer]
+    listoper = [shifter,degrader,tear,blur, pixelate, disperse, graindrip, seamer]
     randint1 = random.randint(0, 30)
     randint2 = random.randint(0,2000)
     randint3 = random.randint(0,2000)
+    randint4 = random.randint(1,3)
+    randint5 = random.randint(1, 300)
     cmd = random.choice(listoper)
+    print cmd
     if cmd == pixelate:
         im2 = pixelate(im, randint1)
         im = im2
@@ -557,7 +586,7 @@ def randomize():
         statelist.append(random.getstate())
         operationlist.append('ndrip')
     elif cmd == seamer:
-        im2 = seamer(im, random.randint(1, 300), random.randint(1,3))
+        im2 = seamer(im,randint5, randint4)
         im = im2
         tkimage2 = ImageTk.PhotoImage(im2)
         canvas.configure(image = tkimage2)
