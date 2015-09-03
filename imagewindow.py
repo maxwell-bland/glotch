@@ -588,6 +588,7 @@ class SeedChangeDialog:
             seed = int(self.entry1.get())
             random.seed(seed)
             seedlabel.config(text = "Seed #: " + str(seed))
+            print "Your new seed is: " + str(seed)
             root.update()
             self.top.destroy()
         except ValueError:

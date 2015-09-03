@@ -8,7 +8,8 @@ def seamer(im, inter):
     def putseamvert(im, x ,y):
         imsize = im.size
         (width, height) = imsize
-        
+        if height > 900:
+	    height = 900
         if y == height - 1:
             im.putpixel((x,y), (255,0,0))
             return
@@ -39,7 +40,8 @@ def seamer(im, inter):
 
     def putseamhori(im, x ,y):
         (width, height) = im.size
-        
+        if width > 900:
+	    width = 900
         if x == width - 1:
             im.putpixel((x,y), (255,0,0))
             return
