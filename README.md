@@ -6,5 +6,3 @@
 * Undo
 * Shrubbery-inspired window icons
 
-
-attempting to pin but it won't let me. Test 1
